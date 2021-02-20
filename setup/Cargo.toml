@@ -1,0 +1,14 @@
+[package]
+name = "setup"
+version = "0.1.0"
+edition = "2018"
+authors = ["martin.fontana@spacefoot.com"]
+
+[dependencies]
+diesel = { version = "1.4.5", features = ["mysql"] }
+fake = "2.4"
+rand = "0.8"
+db = { path = "../db" }
+
+[[bin]]
+name = "fill_database"
