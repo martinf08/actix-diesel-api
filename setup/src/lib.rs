@@ -10,7 +10,7 @@ pub fn create_user(conn: &MysqlConnection, name: &str) {
     diesel::insert_into(users)
         .values(&new_user)
         .execute(conn)
-        .expect("Error saving new post");
+        .expect("Error saving new user");
 }
 
 pub fn init() {
