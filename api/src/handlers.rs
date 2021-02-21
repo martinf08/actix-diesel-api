@@ -1,8 +1,7 @@
-use actix_web::{web, Responder, HttpResponse, HttpRequest, http};
+use actix_web::{web, Responder, HttpResponse, HttpRequest};
 use db::DbPool;
 use diesel::prelude::*;
 use diesel::{QueryDsl, ExpressionMethods};
-use actix_web::body::Body;
 use serde::Deserialize;
 
 pub fn api_config(cfg: &mut web::ServiceConfig) {
