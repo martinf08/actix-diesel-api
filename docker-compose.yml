@@ -1,8 +1,11 @@
+#USER_ID=$(id -u) GROUP_ID=$(id -g) docker-compose up -d --build
 version: '3.8'
+
 services:
   traefik:
     image: traefik:v2.4
     container_name: traefik
+    restart: unless-stopped
     command:
       #- --log.level=DEBUG
       - --api.insecure=true
@@ -14,9 +17,10 @@ services:
       - 8080:8080
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
+
   portainer:
-    container_name: portainer
     image: portainer/portainer-ce
+    container_name: portainer
     restart: unless-stopped
     command: -H unix:///var/run/docker.sock
     ports:
@@ -31,9 +35,11 @@ services:
       traefik.http.routers.portainer-http.entrypoints: web
       traefik.http.routers.portainer.rule: Host(`dashboard.localhost`)
       traefik.http.services.portainer-websecure.loadbalancer.server.port: 9000
+
   db:
     image: mysql:5.7
-    restart: always
+    container_name: mysql
+    restart: unless-stopped
     environment:
       MYSQL_DATABASE: diesel
       MYSQL_USER: user
@@ -44,9 +50,47 @@ services:
     expose:
       - 3306
     volumes:
-      - my-db:/var/lib/mysql
+      - db:/var/lib/mysql
+
+  diesel_cli:
+    build: ./docker/diesel_cli/
+    container_name: diesel_cli
+    restart: unless-stopped
+    user: "${USER_ID}:${GROUP_ID}"
+    env_file:
+      - .env-docker
+    working_dir: /app/api
+    volumes:
+      - ./:/app
+    depends_on:
+      - db
+    entrypoint: ../docker/diesel_cli/entrypoint.sh
+
+  rust:
+    image: rust:latest
+    container_name: rust
+    restart: unless-stopped
+    user: "${USER_ID}:${GROUP_ID}"
+    env_file:
+      - .env-docker
+    working_dir: /app
+    volumes:
+      - ./:/app
+      - ./.env-docker:/.env:ro
+    depends_on:
+      - db
+      - diesel_cli
+    entrypoint: ./docker/rust/entrypoint.sh
     labels:
       traefik.enable: true
+      traefik.http.routers.rust-http.entrypoints: web
+      traefik.http.routers.rust.rule: Host(`api.localhost`)
+      traefik.http.services.rust-websecure.loadbalancer.server.port: 5000
+    ports:
+      - 5000:5000
+    expose:
+      - 5000
+
 volumes:
-  my-db:
+  db:
   dataportainer:
