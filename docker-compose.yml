@@ -1,18 +1,52 @@
-version: '3.3'
+version: '3.8'
 services:
+  traefik:
+    image: traefik:v2.4
+    container_name: traefik
+    command:
+      #- --log.level=DEBUG
+      - --api.insecure=true
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+    ports:
+      - 80:80
+      - 8080:8080
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+  portainer:
+    container_name: portainer
+    image: portainer/portainer-ce
+    restart: unless-stopped
+    command: -H unix:///var/run/docker.sock
+    ports:
+      - 9000
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - dataportainer:/data
+    labels:
+      traefik.enable: true
+      traefik.http.routers.portainer-http.entrypoints: web
+      traefik.http.routers.portainer.rule: Host(`dashboard.localhost`)
+      traefik.http.services.portainer-websecure.loadbalancer.server.port: 9000
   db:
     image: mysql:5.7
     restart: always
     environment:
-      MYSQL_DATABASE: 'diesel'
-      MYSQL_USER: 'user'
-      MYSQL_PASSWORD: 'password'
-      MYSQL_ROOT_PASSWORD: 'root'
+      MYSQL_DATABASE: diesel
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: root
     ports:
-      - '3306:3306'
+      - 3306:3306
     expose:
-      - '3306'
+      - 3306
     volumes:
       - my-db:/var/lib/mysql
+    labels:
+      traefik.enable: true
 volumes:
   my-db:
+  dataportainer:
