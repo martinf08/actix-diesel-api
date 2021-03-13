@@ -85,9 +85,9 @@ services:
       traefik.enable: true
       traefik.http.routers.rust-http.entrypoints: web
       traefik.http.routers.rust.rule: Host(`api.localhost`)
-      traefik.http.services.rust-websecure.loadbalancer.server.port: 5000
+      traefik.http.services.rust-websecure.loadbalancer.server.port: 5001
     expose:
-      - 5000
+      - 5001
 
 volumes:
   db:
