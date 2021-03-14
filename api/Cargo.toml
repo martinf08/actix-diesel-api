@@ -7,6 +7,7 @@ default-run = "api"
 
 [dependencies]
 actix-cors = "0.5.4"
+actix-identity = "0.3.1"
 actix-web = { version = "3", features = ["openssl"] }
 db = { path = "../db" }
 diesel = { version = "1.4.5", features = ["mysql"] }

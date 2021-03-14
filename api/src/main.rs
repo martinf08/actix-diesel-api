@@ -1,6 +1,7 @@
 extern crate env_logger;
 
 mod handlers;
+mod auth_handler;
 
 use actix_cors::Cors;
 use actix_web::middleware::Logger;
@@ -19,7 +20,7 @@ async fn main() -> std::io::Result<()> {
         None => ()
     }
 
-    std::env::set_var("RUST_LOG", "actix_web=info");
+    std::env::set_var("RUST_LOG", "actix_web=info,actix_server=info");
     env_logger::init();
 
     let pool = db::DbConnection::new();

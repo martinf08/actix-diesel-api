@@ -1,11 +1,13 @@
-use db::DbConnection;
-use diesel::{MysqlConnection, RunQueryDsl};
+use db::{DbConnection, DbPool};
+use diesel::{MysqlConnection, RunQueryDsl, QueryDsl, ExpressionMethods};
 use fake::Fake;
+use db::models::{User, SlimUser};
+use diesel::result::Error;
 
-pub fn create_user(conn: &MysqlConnection, name: &str) {
+pub fn create_user(conn: &MysqlConnection, name: &str, password: &str) {
     use db::schema::users::dsl::users;
 
-    let new_user = db::models::NewUser { name };
+    let new_user = db::models::NewUser { name, password };
 
     diesel::insert_into(users)
         .values(&new_user)
@@ -20,10 +22,12 @@ pub fn init() {
 
     use fake::faker::name::raw::*;
     use fake::locales::EN;
+    use fake::faker::lorem::raw::*;
 
     for _ in 1..2000 {
         let name: String = Name(EN).fake();
-        create_user(&connection, &name)
+        let password: String = Word(EN).fake();
+        create_user(&connection, &name, &password)
     }
 }
 
