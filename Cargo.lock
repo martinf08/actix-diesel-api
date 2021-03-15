@@ -381,6 +381,7 @@ dependencies = [
  "actix-identity",
  "actix-web",
  "db",
+ "derive_more",
  "diesel",
  "dotenv",
  "env_logger",

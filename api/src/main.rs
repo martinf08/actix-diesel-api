@@ -2,6 +2,7 @@ extern crate env_logger;
 
 mod handlers;
 mod auth_handler;
+mod errors;
 
 use actix_cors::Cors;
 use actix_web::middleware::Logger;

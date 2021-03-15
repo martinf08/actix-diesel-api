@@ -15,6 +15,7 @@ pub struct NewUser<'a, 'b> {
     pub password: &'b str,
 }
 
+#[derive(Serialize)]
 pub struct SlimUser {
     pub name: Option<String>,
 }

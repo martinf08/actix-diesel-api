@@ -1,8 +1,6 @@
-use db::{DbConnection, DbPool};
-use diesel::{MysqlConnection, RunQueryDsl, QueryDsl, ExpressionMethods};
+use db::DbConnection;
+use diesel::{MysqlConnection, RunQueryDsl};
 use fake::Fake;
-use db::models::{User, SlimUser};
-use diesel::result::Error;
 
 pub fn create_user(conn: &MysqlConnection, name: &str, password: &str) {
     use db::schema::users::dsl::users;
