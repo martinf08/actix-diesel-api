@@ -31,19 +31,21 @@ async fn main() -> std::io::Result<()> {
             .wrap(Cors::default().allow_any_origin())
             .data(pool.pool.clone())
             .service(web::scope("/api").configure(handlers::api_config))
+            .service(web::scope("/auth")
+                .service(web::resource("/login").route(web::post().to(auth_handler::login))))
             .default_service(
                 // 404 for GET request
                 web::resource("")
                     .route(web::get().to(|req| not_found(req)))
-                // all requests that are not `GET`
-                .route(
-                    web::route()
-                        .guard(guard::Not(guard::Get()))
-                        .to(HttpResponse::MethodNotAllowed),
-                ),
+                    // all requests that are not `GET`
+                    .route(
+                        web::route()
+                            .guard(guard::Not(guard::Get()))
+                            .to(HttpResponse::MethodNotAllowed),
+                    ),
             )
     )
-    .bind("0.0.0.0:5001")?
-    .run()
-    .await
+        .bind("0.0.0.0:5001")?
+        .run()
+        .await
 }
