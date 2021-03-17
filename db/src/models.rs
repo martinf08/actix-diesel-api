@@ -17,13 +17,13 @@ pub struct NewUser<'a, 'b> {
 
 #[derive(Serialize)]
 pub struct SlimUser {
-    pub name: Option<String>,
+    pub name: String,
 }
 
 impl From<User> for SlimUser {
     fn from(user: User) -> Self {
         SlimUser {
-            name: user.name
+            name: user.name.unwrap()
         }
     }
 }

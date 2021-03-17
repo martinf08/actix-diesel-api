@@ -1,20 +1,25 @@
-use diesel::prelude::*;
+use actix_identity::Identity;
 use actix_identity;
 use actix_web::{web, HttpResponse};
-use db::models::{User, SlimUser};
-use diesel::{QueryDsl, ExpressionMethods};
-use db::DbPool;
-use futures::{Future, FutureExt};
 use crate::errors::ServiceError;
-use actix_identity::Identity;
-use actix_web::error::BlockingError;
+use db::DbPool;
+use db::models::{User, SlimUser};
+use diesel::prelude::*;
+use diesel::{QueryDsl, ExpressionMethods};
+use serde::Deserialize;
+
+#[derive(Clone, Deserialize)]
+pub struct PartialUser {
+    pub name: String,
+    password: String
+}
 
 pub async fn login(
-    auth_data: web::Json<User>,
+    partial_user: web::Json<PartialUser>,
     id: Identity,
     pool: web::Data<DbPool>,
 ) -> Result<HttpResponse, ServiceError> {
-    match web::block(move || query_user(auth_data.into_inner(), pool)).await {
+    match web::block(move || query_user(partial_user.into_inner(), pool)).await {
         Ok(users) => {
             let (user_data, user_found) = users;
             if user_data.password != user_found.password {
@@ -30,12 +35,15 @@ pub async fn login(
     }
 }
 
-fn query_user(auth_data: User, pool: web::Data<DbPool>) -> Result<(User, User), ServiceError> {
+fn query_user(partial_user: PartialUser, pool: web::Data<DbPool>) -> Result<(PartialUser, PartialUser), ServiceError> {
     use db::schema::users::dsl::*;
     let conn = &pool.get().unwrap();
     let mut users_found = users.
-        filter(name.eq(&auth_data.name))
+        filter(name.eq(&partial_user.name))
         .load::<User>(conn)?;
 
-    Ok((auth_data, users_found.pop().unwrap()))
+    let user_found = users_found.pop().unwrap();
+    let user_found: PartialUser = PartialUser { name: user_found.name.unwrap(), password: user_found.password.unwrap() };
+
+    Ok((partial_user.clone(), user_found))
 }
