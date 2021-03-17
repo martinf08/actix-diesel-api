@@ -11,7 +11,7 @@ use serde::Deserialize;
 #[derive(Clone, Deserialize)]
 pub struct PartialUser {
     pub name: String,
-    password: String
+    password: String,
 }
 
 pub async fn login(
@@ -23,16 +23,27 @@ pub async fn login(
         Ok(users) => {
             let (user_data, user_found) = users;
             if user_data.password != user_found.password {
-                return Err(ServiceError::InternalServerError)
+                return Err(ServiceError::InternalServerError);
             }
-            let user = SlimUser {
-                name: user_data.name
-            };
-            id.remember(serde_json::to_string(&user).unwrap());
+            id.remember(user_data.name.to_owned());
             Ok(HttpResponse::Ok().finish())
         }
         Err(_) => Err(ServiceError::InternalServerError)
     }
+}
+
+pub async fn is_logged(id: Identity) -> HttpResponse {
+    if let Some(id) = id.identity() {
+        HttpResponse::Ok().json(format!("Hello {}", id))
+    } else {
+        HttpResponse::Ok().json("Welcome Anonymous")
+    }
+
+}
+
+pub async fn logout(id: Identity) -> HttpResponse {
+    id.forget();
+    HttpResponse::Ok().finish()
 }
 
 fn query_user(partial_user: PartialUser, pool: web::Data<DbPool>) -> Result<(PartialUser, PartialUser), ServiceError> {

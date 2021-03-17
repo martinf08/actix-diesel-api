@@ -10,6 +10,7 @@ use actix_web::{App, HttpResponse, HttpServer, web, guard};
 use crate::handlers::not_found;
 use setup;
 use std::env;
+use actix_identity::{IdentityService, CookieIdentityPolicy};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -29,10 +30,16 @@ async fn main() -> std::io::Result<()> {
         move || App::new()
             .wrap(Logger::default())
             .wrap(Cors::default().allow_any_origin())
+            .wrap(IdentityService::new(CookieIdentityPolicy::new(&[0; 32])
+                    .name("auth-cookie")
+                    .secure(false)))
             .data(pool.pool.clone())
             .service(web::scope("/api").configure(handlers::api_config))
             .service(web::scope("/auth")
-                .service(web::resource("/login").route(web::post().to(auth_handler::login))))
+                .service(web::resource("/login").route(web::post().to(auth_handler::login)))
+                .service(web::resource("/is_logged").to(auth_handler::is_logged))
+                .service(web::resource("/logout").to(auth_handler::logout))
+            )
             .default_service(
                 // 404 for GET request
                 web::resource("")
@@ -45,7 +52,7 @@ async fn main() -> std::io::Result<()> {
                     ),
             )
     )
-        .bind("0.0.0.0:5001")?
-        .run()
-        .await
+    .bind("0.0.0.0:5001")?
+    .run()
+    .await
 }
