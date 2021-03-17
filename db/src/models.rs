@@ -15,15 +15,8 @@ pub struct NewUser<'a, 'b> {
     pub password: &'b str,
 }
 
-#[derive(Serialize)]
-pub struct SlimUser {
+#[derive(Clone, Deserialize)]
+pub struct PartialUser {
     pub name: String,
-}
-
-impl From<User> for SlimUser {
-    fn from(user: User) -> Self {
-        SlimUser {
-            name: user.name.unwrap()
-        }
-    }
+    pub password: String,
 }

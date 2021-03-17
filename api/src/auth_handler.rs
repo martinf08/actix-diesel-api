@@ -3,16 +3,9 @@ use actix_identity;
 use actix_web::{web, HttpResponse};
 use crate::errors::ServiceError;
 use db::DbPool;
-use db::models::{User, SlimUser};
+use db::models::{User, PartialUser};
 use diesel::prelude::*;
 use diesel::{QueryDsl, ExpressionMethods};
-use serde::Deserialize;
-
-#[derive(Clone, Deserialize)]
-pub struct PartialUser {
-    pub name: String,
-    password: String,
-}
 
 pub async fn login(
     partial_user: web::Json<PartialUser>,
@@ -38,7 +31,6 @@ pub async fn is_logged(id: Identity) -> HttpResponse {
     } else {
         HttpResponse::Ok().json("Welcome Anonymous")
     }
-
 }
 
 pub async fn logout(id: Identity) -> HttpResponse {
