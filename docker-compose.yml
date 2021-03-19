@@ -89,6 +89,21 @@ services:
     expose:
       - 5001
 
+  svelte:
+    build: ./front_app/
+    container_name: svelte
+    restart: unless-stopped
+    user: "${USER_ID}:${GROUP_ID}"
+    environment:
+      - HOST=0.0.0.0
+    labels:
+      traefik.enable: true
+      traefik.http.routers.svelte-http.entrypoints: web
+      traefik.http.routers.svelte.rule: Host(`front.localhost`)
+      traefik.http.services.svelte-websecure.loadbalancer.server.port: 5000
+    expose:
+      - 5000
+
 volumes:
   db:
   dataportainer:

@@ -3,7 +3,7 @@
 
     let data: string[] = []
     onMount(async () => {
-        data = await fetch('http://api.localhost/api/?list=100').then(x => x.json())
+        data = await fetch('http://api.localhost/api/?list=10').then(x => x.json())
     })
 </script>
 
@@ -24,13 +24,6 @@
         padding: 1em;
         max-width: 240px;
         margin: 0 auto;
-    }
-
-    h1 {
-        color: #ff3e00;
-        text-transform: uppercase;
-        font-size: 4em;
-        font-weight: 100;
     }
 
     @media (min-width: 640px) {
