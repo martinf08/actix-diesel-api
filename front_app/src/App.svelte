@@ -1,5 +1,6 @@
 <script lang="ts">
     import {onMount} from 'svelte'
+    import Login from './Login.svelte';
 
     let data: string[] = []
     onMount(async () => {
@@ -8,27 +9,49 @@
 </script>
 
 <main>
-    <ul>
+    <table>
+        <tr>
+            <th>Username</th>
+            <th>Password</th>
+        </tr>
         {#each data as user}
-            <li>{user.name}</li>
+            <tr>
+                <td>{user.name}</td>
+                <td>{user.password}</td>
+            </tr>
         {/each}
-    </ul>
+    </table>
 
-    <p>Visit the <a href="https://svelte.dev/tutorial">Svelte tutorial</a> to learn how to build Svelte apps.</p>
+    <Login/>
 </main>
 
-
 <style>
-    main {
-        text-align: center;
-        padding: 1em;
-        max-width: 240px;
-        margin: 0 auto;
+    td,
+    th {
+        border: 1px solid rgb(190, 190, 190);
+        padding: 10px;
     }
 
-    @media (min-width: 640px) {
-        main {
-            max-width: none;
-        }
+    td {
+        text-align: center;
+    }
+
+    tr:nth-child(even) {
+        background-color: #eee;
+    }
+
+    table {
+        border-collapse: collapse;
+        border: 2px solid rgb(200, 200, 200);
+        letter-spacing: 1px;
+        font-family: sans-serif;
+        font-size: .8rem;
+        margin-bottom: 20px;
+    }
+
+    main {
+        letter-spacing: 1px;
+        font-family: sans-serif;
+        font-size: 1rem;
     }
 </style>

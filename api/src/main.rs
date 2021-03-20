@@ -27,30 +27,33 @@ async fn main() -> std::io::Result<()> {
 
     let pool = db::DbConnection::new();
     HttpServer::new(
-        move || App::new()
-            .wrap(Logger::default())
-            .wrap(Cors::default().allow_any_origin())
-            .wrap(IdentityService::new(CookieIdentityPolicy::new(&[0; 32])
+        move || {
+
+            App::new()
+                .wrap(Logger::default())
+                .wrap(Cors::permissive())
+                .wrap(IdentityService::new(CookieIdentityPolicy::new(&[0; 32])
                     .name("auth-cookie")
                     .secure(false)))
-            .data(pool.pool.clone())
-            .service(web::scope("/api").configure(handlers::api_config))
-            .service(web::scope("/auth")
-                .service(web::resource("/login").route(web::post().to(auth_handler::login)))
-                .service(web::resource("/is_logged").to(auth_handler::is_logged))
-                .service(web::resource("/logout").to(auth_handler::logout))
-            )
-            .default_service(
-                // 404 for GET request
-                web::resource("")
-                    .route(web::get().to(|req| not_found(req)))
-                    // all requests that are not `GET`
-                    .route(
-                        web::route()
-                            .guard(guard::Not(guard::Get()))
-                            .to(HttpResponse::MethodNotAllowed),
-                    ),
-            )
+                .data(pool.pool.clone())
+                .service(web::scope("/api").configure(handlers::api_config))
+                .service(web::scope("/auth")
+                    .service(web::resource("/login").route(web::post().to(auth_handler::login)))
+                    .service(web::resource("/is_logged").to(auth_handler::is_logged))
+                    .service(web::resource("/logout").to(auth_handler::logout))
+                )
+                .default_service(
+                    // 404 for GET request
+                    web::resource("")
+                        .route(web::get().to(|req| not_found(req)))
+                        // all requests that are not `GET`
+                        .route(
+                            web::route()
+                                .guard(guard::Not(guard::Get()))
+                                .to(HttpResponse::MethodNotAllowed),
+                        ),
+                )
+        }
     )
     .bind("0.0.0.0:5001")?
     .run()
