@@ -8,13 +8,13 @@ async function validate() {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             },
+            credentials: 'include',
             body: JSON.stringify({
                 name: name,
                 password: password
             })
         })
         .then(response => {
-            console.log(response)
             status = response.status
         })
     }
