@@ -8,6 +8,7 @@ authors = ["martin.fontana@spacefoot.com"]
 diesel = { version = "1.4.5", features = ["mysql"] }
 fake = "2.4"
 rand = "0.8"
+bcrypt = "0.9.0"
 db = { path = "../db" }
 
 [[bin]]

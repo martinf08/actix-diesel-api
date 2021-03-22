@@ -6,6 +6,7 @@ use db::DbPool;
 use db::models::{User, PartialUser};
 use diesel::prelude::*;
 use diesel::{QueryDsl, ExpressionMethods};
+use bcrypt::verify;
 
 pub async fn login(
     partial_user: web::Json<PartialUser>,
@@ -15,7 +16,7 @@ pub async fn login(
     match web::block(move || query_user(partial_user.into_inner(), pool)).await {
         Ok(users) => {
             let (user_data, user_found) = users;
-            if user_data.password != user_found.password {
+            if !verify(user_data.password, &*user_found.password).unwrap() {
                 return Err(ServiceError::InternalServerError);
             }
             id.remember(user_data.name.to_owned());

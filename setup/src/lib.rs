@@ -1,6 +1,9 @@
 use db::DbConnection;
 use diesel::{MysqlConnection, RunQueryDsl};
-use fake::Fake;
+use bcrypt::{DEFAULT_COST, hash};
+
+const ADMIN_USER: &str = "admin";
+const ADMIN_PASSWORD: &str = "admin";
 
 pub fn create_user(conn: &MysqlConnection, name: &str, password: &str) {
     use db::schema::users::dsl::users;
@@ -18,15 +21,7 @@ pub fn init() {
 
     clean_db(&connection);
 
-    use fake::faker::name::raw::*;
-    use fake::locales::EN;
-    use fake::faker::lorem::raw::*;
-
-    for _ in 1..2000 {
-        let name: String = Name(EN).fake();
-        let password: String = Word(EN).fake();
-        create_user(&connection, &name, &password)
-    }
+    create_user(&connection, ADMIN_USER, &*hash(ADMIN_PASSWORD, DEFAULT_COST).unwrap());
 }
 
 fn clean_db(conn: &MysqlConnection) {
