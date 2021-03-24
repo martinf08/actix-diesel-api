@@ -1,15 +1,24 @@
-use db::DbConnection;
-use diesel::{MysqlConnection, RunQueryDsl};
 use bcrypt::{DEFAULT_COST, hash};
+use db::DbConnection;
 use db::models::Role;
+use diesel::query_dsl::filter_dsl::FilterDsl;
+use diesel::query_dsl::select_dsl::SelectDsl;
+use diesel::result::Error;
+use diesel::{MysqlConnection, RunQueryDsl, ExpressionMethods};
 
 const ADMIN_USER: &str = "admin";
 const ADMIN_PASSWORD: &str = "admin";
 
 pub fn create_user(conn: &MysqlConnection, name: &str, password: &str) {
     use db::schema::users::dsl::users;
+    use db::schema::roles::dsl::{id, name as role_name, roles};
 
-    let new_user = db::models::NewUser { name, password, role_id: &1 };
+    let role_id: Result<i32, Error> = roles
+        .filter(role_name.eq("ROLE_ADMIN"))
+        .select(id)
+        .first(conn);
+
+    let new_user = db::models::NewUser { name, password, role_id: &role_id.unwrap() };
 
     diesel::insert_into(users)
         .values(&new_user)
@@ -28,21 +37,18 @@ pub fn init() {
 }
 
 fn clean_db(conn: &MysqlConnection) {
-    diesel::sql_query("SET FOREIGN_KEY_CHECKS = 0")
-        .execute(conn)
-        .expect(&format!("Couldn't  FOREIGN_KEY_CHECK"));
+    let queries = vec![
+        "SET FOREIGN_KEY_CHECKS = 0",
+        "TRUNCATE TABLE users",
+        "TRUNCATE TABLE roles",
+        "SET FOREIGN_KEY_CHECKS = 1",
+    ];
 
-    diesel::sql_query("TRUNCATE TABLE users")
-        .execute(conn)
-        .expect(&format!("Couldn't truncate table users"));
-
-    diesel::sql_query("TRUNCATE TABLE roles")
-        .execute(conn)
-        .expect(&format!("Couldn't truncate table roles"));
-
-    diesel::sql_query("SET FOREIGN_KEY_CHECKS = 1")
-        .execute(conn)
-        .expect(&format!("Couldn't  FOREIGN_KEY_CHECK"));
+    for query in queries {
+        diesel::sql_query(query)
+            .execute(conn)
+            .expect(&format!("Couldn't run {}", query));
+    }
 }
 
 fn create_roles(conn: &MysqlConnection) {

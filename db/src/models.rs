@@ -18,10 +18,19 @@ pub struct NewUser<'a, 'b, 'c> {
     pub role_id: &'c i32,
 }
 
-#[derive(Clone, Deserialize)]
+#[derive(Clone, Deserialize, Queryable)]
 pub struct PartialUser {
     pub name: String,
     pub password: String,
+}
+
+impl From<User> for PartialUser {
+    fn from(user: User) -> Self {
+        PartialUser {
+            name: user.name.unwrap(),
+            password: user.password.unwrap()
+        }
+    }
 }
 
 #[derive(Insertable, Serialize, Deserialize, Queryable, Debug)]
