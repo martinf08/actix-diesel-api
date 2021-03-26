@@ -1,10 +1,12 @@
 -- Your SQL goes here
-CREATE TABLE roles
+CREATE TABLE IF NOT EXISTS roles
 (
     id   INTEGER AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255)
+    name VARCHAR(255) DEFAULT 'ROLE_USER'
 );
 
 ALTER TABLE users
     ADD COLUMN role_id INT,
-    ADD CONSTRAINT FOREIGN KEY (role_id) REFERENCES roles(id)
+    ADD CONSTRAINT FOREIGN KEY (role_id)
+        REFERENCES roles(id)
+        ON DELETE CASCADE;
