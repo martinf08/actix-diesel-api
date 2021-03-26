@@ -1,15 +1,21 @@
-use actix_identity::Identity;
-use actix_identity;
-use actix_web::{web, HttpResponse};
 use crate::errors::ServiceError;
-use db::DbPool;
-use db::models::{User, PartialUser};
-use diesel::prelude::*;
-use diesel::{QueryDsl, ExpressionMethods};
-use bcrypt::verify;
-use diesel::result::Error;
-use std::sync::{Arc, Mutex};
+use actix_identity;
+use actix_identity::Identity;
 use actix_web::web::Json;
+use actix_web::{web, HttpResponse};
+use bcrypt::verify;
+use db::models::{PartialUser, User};
+use db::DbPool;
+use diesel::prelude::*;
+use diesel::result::Error;
+use diesel::{ExpressionMethods, QueryDsl};
+use std::sync::{Arc, Mutex};
+
+pub fn config(cfg: &mut web::ServiceConfig) {
+    cfg.service(web::resource("/login").route(web::post().to(login)))
+        .service(web::resource("/is_logged").to(is_logged))
+        .service(web::resource("/logout").to(logout));
+}
 
 pub async fn login(
     partial_user: web::Json<PartialUser>,
@@ -20,13 +26,18 @@ pub async fn login(
     let user_closure = user_cloned.clone();
     match web::block(move || query_user(user_cloned, pool)).await {
         Ok(user_found) => {
-            if !verify(&user_closure.clone().lock().unwrap().password, &*user_found.password).unwrap() {
+            if !verify(
+                &user_closure.clone().lock().unwrap().password,
+                &*user_found.password,
+            )
+            .unwrap()
+            {
                 return Err(ServiceError::InternalServerError);
             }
             id.remember(user_found.name.to_owned());
             Ok(HttpResponse::Ok().finish())
         }
-        Err(_) => Err(ServiceError::InternalServerError)
+        Err(_) => Err(ServiceError::InternalServerError),
     }
 }
 
@@ -43,8 +54,11 @@ pub async fn logout(id: Identity) -> HttpResponse {
     HttpResponse::Ok().finish()
 }
 
-fn query_user(partial_user: Arc<Mutex<Json<PartialUser>>>, pool: web::Data<DbPool>) -> Result<PartialUser, Error> {
-    use db::schema::users::dsl::{users, name as user_name};
+fn query_user(
+    partial_user: Arc<Mutex<Json<PartialUser>>>,
+    pool: web::Data<DbPool>,
+) -> Result<PartialUser, Error> {
+    use db::schema::users::dsl::{name as user_name, users};
 
     let conn = &pool.get().unwrap();
 

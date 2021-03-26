@@ -1,13 +1,11 @@
 extern crate env_logger;
 
 mod handlers;
-mod auth_handler;
 mod errors;
 
 use actix_cors::Cors;
 use actix_web::middleware::Logger;
 use actix_web::{App, HttpResponse, HttpServer, web, guard};
-use crate::handlers::not_found;
 use setup;
 use std::env;
 use actix_identity::{IdentityService, CookieIdentityPolicy};
@@ -28,7 +26,6 @@ async fn main() -> std::io::Result<()> {
     let pool = db::DbConnection::new();
     HttpServer::new(
         move || {
-
             App::new()
                 .wrap(Logger::default())
                 .wrap(Cors::permissive())
@@ -36,16 +33,12 @@ async fn main() -> std::io::Result<()> {
                     .name("auth-cookie")
                     .secure(false)))
                 .data(pool.pool.clone())
-                .service(web::scope("/api").configure(handlers::api_config))
-                .service(web::scope("/auth")
-                    .service(web::resource("/login").route(web::post().to(auth_handler::login)))
-                    .service(web::resource("/is_logged").to(auth_handler::is_logged))
-                    .service(web::resource("/logout").to(auth_handler::logout))
-                )
+                .service(web::scope("/api").configure(handlers::api_handler::config))
+                .service(web::scope("/auth").configure(handlers::auth_handler::config))
                 .default_service(
                     // 404 for GET request
                     web::resource("")
-                        .route(web::get().to(|req| not_found(req)))
+                        .route(web::get().to(|req| handlers::api_handler::not_found(req)))
                         // all requests that are not `GET`
                         .route(
                             web::route()
