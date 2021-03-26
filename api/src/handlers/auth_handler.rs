@@ -4,7 +4,7 @@ use actix_identity::Identity;
 use actix_web::web::Json;
 use actix_web::{web, HttpResponse};
 use bcrypt::verify;
-use db::models::{PartialUser, User};
+use db::models::{SlimUser, User};
 use db::DbPool;
 use diesel::prelude::*;
 use diesel::result::Error;
@@ -18,11 +18,11 @@ pub fn config(cfg: &mut web::ServiceConfig) {
 }
 
 pub async fn login(
-    partial_user: web::Json<PartialUser>,
+    slim_user: web::Json<SlimUser>,
     id: Identity,
     pool: web::Data<DbPool>,
 ) -> Result<HttpResponse, ServiceError> {
-    let user_cloned = Arc::new(Mutex::new(partial_user));
+    let user_cloned = Arc::new(Mutex::new(slim_user));
     let user_closure = user_cloned.clone();
     match web::block(move || query_user(user_cloned, pool)).await {
         Ok(user_found) => {
@@ -55,17 +55,16 @@ pub async fn logout(id: Identity) -> HttpResponse {
 }
 
 fn query_user(
-    partial_user: Arc<Mutex<Json<PartialUser>>>,
+    slim_user: Arc<Mutex<Json<SlimUser>>>,
     pool: web::Data<DbPool>,
-) -> Result<PartialUser, Error> {
+) -> Result<SlimUser, Error> {
     use db::schema::users::dsl::{name as user_name, users};
 
     let conn = &pool.get().unwrap();
 
-    let user: User = users
-        .filter(user_name.eq(&partial_user.clone().lock().unwrap().name))
-        .first(conn)
-        .unwrap();
+    let user: QueryResult<User> = users
+        .filter(user_name.eq(&slim_user.clone().lock().unwrap().name))
+        .first(conn);
 
-    Ok(PartialUser::from(user))
+    Ok(SlimUser::from(user.unwrap()))
 }

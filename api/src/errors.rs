@@ -9,7 +9,7 @@ pub enum ServiceError {
     InternalServerError,
 
     #[display(fmt = "Unauthorized")]
-    Unauthorized
+    Unauthorized,
 }
 
 impl ResponseError for ServiceError {
@@ -18,7 +18,7 @@ impl ResponseError for ServiceError {
             ServiceError::InternalServerError => {
                 HttpResponse::InternalServerError().json("Internal Server Error")
             }
-            ServiceError::Unauthorized => HttpResponse::Unauthorized().json("Unauthorized")
+            ServiceError::Unauthorized => HttpResponse::Unauthorized().json("Unauthorized"),
         }
     }
 }
@@ -26,7 +26,7 @@ impl ResponseError for ServiceError {
 impl From<DBError> for ServiceError {
     fn from(error: DBError) -> ServiceError {
         match error {
-            _ => ServiceError::InternalServerError
+            _ => ServiceError::InternalServerError,
         }
     }
 }
