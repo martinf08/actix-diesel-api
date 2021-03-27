@@ -10,6 +10,7 @@ use diesel::prelude::*;
 use diesel::result::Error;
 use diesel::{ExpressionMethods, QueryDsl};
 use std::sync::{Arc, Mutex};
+use std::convert::identity;
 
 pub fn config(cfg: &mut web::ServiceConfig) {
     cfg.service(web::resource("/login").route(web::post().to(login)))
@@ -43,9 +44,9 @@ pub async fn login(
 
 pub async fn is_logged(id: Identity) -> HttpResponse {
     if let Some(id) = id.identity() {
-        HttpResponse::Ok().json(format!("Hello {}", id))
+        HttpResponse::Ok().json(true)
     } else {
-        HttpResponse::Ok().json("Welcome Anonymous")
+        HttpResponse::Ok().json(false)
     }
 }
 

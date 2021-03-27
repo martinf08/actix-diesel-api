@@ -1,4 +1,5 @@
 use actix_web::{web, HttpResponse};
+use bcrypt::{hash, DEFAULT_COST};
 use db::models::{PartialUser, SlimUser, User};
 use db::DbPool;
 use diesel::{ExpressionMethods, QueryDsl, QueryResult, RunQueryDsl};
@@ -25,7 +26,7 @@ pub async fn register(slim_user: web::Json<SlimUser>, pool: web::Data<DbPool>) -
 
             let new_user = PartialUser {
                 name: slim_user.name.clone(),
-                password: slim_user.password.clone(),
+                password: hash(slim_user.password.clone(), DEFAULT_COST).unwrap(),
                 role_id: role_id.unwrap(),
             };
 
@@ -33,7 +34,7 @@ pub async fn register(slim_user: web::Json<SlimUser>, pool: web::Data<DbPool>) -
                 .values(&new_user)
                 .execute(conn)
                 .expect("Error saving new user");
-            HttpResponse::Ok().json("Done")
+            HttpResponse::Ok().json({ "Done" })
         }
     }
 }
